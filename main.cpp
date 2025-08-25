@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include <type_traits>
+#include <conio.h>
+#include <chrono>
+#include <thread>
 #include "InputValidators.h"
 
 //
@@ -11,15 +14,19 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using std::chrono::seconds;
+using std::chrono::steady_clock;
 
 char ConvertLetterStringToChar(string input) {
     if (!input.empty()) {
         char convertedLetter = input.front();
-        cout << "DEBUG | Successfully converted letter string to char" << endl; // DEBUG
+        // cout << "DEBUG | Successfully converted letter string to char" << endl; // DEBUG
         return convertedLetter;
     }
     else {
-        cout << "DEBUG | Cannot convert letter string to char" << endl; // DEBUG
+        // cout << "DEBUG | Cannot convert letter string to char" << endl; // DEBUG
         return '\0';
     }
 }
@@ -54,7 +61,6 @@ class Questionnaire {
     private:
         struct questionTemplate { // encapsulation
             string question = "", choiceA = "", choiceB = "", choiceC = "", choiceD = "";
-            // TODO: hide C and D formatted text if user didn't want to create C and D
             char correctChoice = '\0', selectedAnswer = '\0';
             bool isTimed = false;
             int durationSeconds = 0;
@@ -71,10 +77,10 @@ class Questionnaire {
 
 class CreatedQuestions {
     private:
-        vector<Questionnaire::qTemplate> createdQuestions;
+        static vector<Questionnaire::qTemplate> createdQuestions;
 
     public:
-        void addToCreatedQuestions(const string &userQuestion,
+        static void addToCreatedQuestions(const string &userQuestion,
                                    const string &userChoiceA,
                                    const string &userChoiceB,
                                    const string &userChoiceC,
@@ -98,10 +104,20 @@ class CreatedQuestions {
             createdQuestions.push_back(questionnaireCopy);
         }
 
-        const vector<Questionnaire::qTemplate>& outputVectorData() {
+        static void addUserAnswerToVector(const char userInputLetter, const int currentVectorQuestionIndex) {
+            Questionnaire questionnaire;
+            Questionnaire::qTemplate questionnaireCopy = questionnaire.getQuestionTemplate();
+
+            questionnaireCopy.selectedAnswer = userInputLetter;
+            createdQuestions[currentVectorQuestionIndex].selectedAnswer = questionnaireCopy.selectedAnswer;
+        }
+
+        static const vector<Questionnaire::qTemplate>& outputVectorData() {
             return createdQuestions;
         }
 };
+
+vector<Questionnaire::qTemplate> CreatedQuestions::createdQuestions;
 
 class InputQuestionData {
     private:
@@ -120,8 +136,6 @@ class QuizCreation {
         int numberOfCreatedQuestions = 0;
 
         string inputData = ""; // TODO: make a public setter method for validator class to access
-
-        const char EMPTY_CHAR = '\0';
 
         const string WARNING_PREFIX = "Warning: ";
         const string EMPTY_QUESTION_WARNING = WARNING_PREFIX + "No Question input entered!";
@@ -170,7 +184,7 @@ class QuizCreation {
                 }
 
                 numberOfQuestionsToCreate = stringInputToInt;
-                cout << "DEBUG | Retrieved Number of questions to create: " << numberOfQuestionsToCreate << endl; // DEBUG
+                // cout << "DEBUG | Retrieved Number of questions to create: " << numberOfQuestionsToCreate << endl; // DEBUG
                 return true;
             }
             catch (const std::invalid_argument &e)
@@ -255,10 +269,12 @@ class QuizCreation {
             getline(cin, input);
 
             if (input == "N" || input == "n") {
+                input = "";
                 return true;
             }
             else if (input == "Y" || input == "y") {
                 askDetailsUntilSuccess(inputSelection, promptText, questionDataField);
+                input = "";
                 return true;
             }
 
@@ -279,7 +295,6 @@ class QuizCreation {
             askDetailsUntilSuccess(CHOICE_B_SELECTION, "Enter choice B", iQuestionData.choiceB);
 
             askChoicesUntilSuccess("C", CHOICE_C_SELECTION, "Enter choice C", iQuestionData.choiceC);
-
             if (iQuestionData.choiceC != "") {
                 askChoicesUntilSuccess("D", CHOICE_D_SELECTION, "Enter choice D", iQuestionData.choiceD);
                 return;
@@ -291,7 +306,7 @@ class QuizCreation {
         void promptTimeDetails() {
             askDetailsUntilSuccess(IS_TIMED_SELECTION, "Make the question timed?", iQuestionData.isTimed);
 
-            cout << "DEBUG | Is question timed: " << iQuestionData.isTimed << endl; // DEBUG
+            // cout << "DEBUG | Is question timed: " << iQuestionData.isTimed << endl; // DEBUG
 
             if (iQuestionData.isTimed) {
                 askDetailsUntilSuccess(DURATION_SECONDS_SELECTION, "Enter duration in seconds", iQuestionData.durationSeconds);
@@ -301,43 +316,43 @@ class QuizCreation {
             return;
         }
 
-        void makeQuestionUsingDetails() { // WIP
+        void makeQuestionUsingDetails() {
             askDetailsUntilSuccess(QUESTION_SELECTION, "Enter question", iQuestionData.question);
             promptChoicesDetails();
             askDetailsUntilSuccess(CORRECT_CHOICE_SELECTION, "Enter the correct choice", iQuestionData.correctChoice);
             promptTimeDetails();
 
-            // DEBUG
-            cout << "DEBUG | InputQuestionData values" << endl;
-            cout << displayCountOfNewQuestion() << ". " << iQuestionData.question << endl;
-            cout << "A. " << iQuestionData.choiceA << endl;
-            cout << "B. " << iQuestionData.choiceB << endl;
-            cout << "C. " << iQuestionData.choiceC << endl;
-            cout << "D. " << iQuestionData.choiceD << endl;
-            cout << "Correct choice: " << iQuestionData.correctChoice << endl;
-            cout << "Is question Timed: " << iQuestionData.isTimed << endl;
-            cout << "Seconds duration: " << iQuestionData.durationSeconds << endl;
-            cout << "END OF DEBUG" << endl;
+            // // DEBUG
+            // cout << "DEBUG | InputQuestionData values" << endl;
+            // cout << displayCountOfNewQuestion() << ". " << iQuestionData.question << endl;
+            // cout << "A. " << iQuestionData.choiceA << endl;
+            // cout << "B. " << iQuestionData.choiceB << endl;
+            // cout << "C. " << iQuestionData.choiceC << endl;
+            // cout << "D. " << iQuestionData.choiceD << endl;
+            // cout << "Correct choice: " << iQuestionData.correctChoice << endl;
+            // cout << "Is question Timed: " << iQuestionData.isTimed << endl;
+            // cout << "Seconds duration: " << iQuestionData.durationSeconds << endl;
+            // cout << "END OF DEBUG" << endl;
 
-            CreatedQuestions cQuestions;
-            cQuestions.addToCreatedQuestions(iQuestionData.question, iQuestionData.choiceA, iQuestionData.choiceB, iQuestionData.choiceC, iQuestionData.choiceD, iQuestionData.correctChoice, iQuestionData.isTimed, iQuestionData.durationSeconds);
+            CreatedQuestions::addToCreatedQuestions(iQuestionData.question, iQuestionData.choiceA, iQuestionData.choiceB, iQuestionData.choiceC, iQuestionData.choiceD, iQuestionData.correctChoice, iQuestionData.isTimed, iQuestionData.durationSeconds);
 
-            // DEBUG
-            cout << "DEBUG | CreatedQuestions values" << endl;
-            cout << displayCountOfNewQuestion() << ". " << cQuestions.outputVectorData()[0].question << endl;
-            cout << "A. " << cQuestions.outputVectorData()[0].choiceA << endl;
-            cout << "B. " << cQuestions.outputVectorData()[0].choiceB << endl;
-            cout << "C. " << cQuestions.outputVectorData()[0].choiceC << endl;
-            cout << "D. " << cQuestions.outputVectorData()[0].choiceD << endl;
-            cout << "Correct choice: " << cQuestions.outputVectorData()[0].correctChoice << endl;
-            cout << "Is question Timed: " << cQuestions.outputVectorData()[0].isTimed << endl;
-            cout << "Seconds duration: " << cQuestions.outputVectorData()[0].durationSeconds << endl;
-            cout << "END OF DEBUG" << endl;
+            Questionnaire questionnaire;
+            iQuestionData = questionnaire.getQuestionTemplate();
 
-            Questionnaire::qTemplate iQuestionData = inputQuestionData.getInputQuestionData();
+            // // DEBUG
+            // cout << "DEBUG | CreatedQuestions values" << endl;
+            // cout << displayCountOfNewQuestion() << ". " << CreatedQuestions::outputVectorData()[0].question << endl;
+            // cout << "A. " << CreatedQuestions::outputVectorData()[0].choiceA << endl;
+            // cout << "B. " << CreatedQuestions::outputVectorData()[0].choiceB << endl;
+            // cout << "C. " << CreatedQuestions::outputVectorData()[0].choiceC << endl;
+            // cout << "D. " << CreatedQuestions::outputVectorData()[0].choiceD << endl;
+            // cout << "Correct choice: " << CreatedQuestions::outputVectorData()[0].correctChoice << endl;
+            // cout << "Is question Timed: " << CreatedQuestions::outputVectorData()[0].isTimed << endl;
+            // cout << "Seconds duration: " << CreatedQuestions::outputVectorData()[0].durationSeconds << endl;
+            // cout << "END OF DEBUG" << endl;
 
             numberOfCreatedQuestions++;
-            cout << "DEBUG | Retrieved number of questions created: " << numberOfCreatedQuestions << endl; // DEBUG
+            // cout << "DEBUG | Retrieved number of questions created: " << numberOfCreatedQuestions << endl; // DEBUG
 
             return;
         }
@@ -349,12 +364,178 @@ class QuizCreation {
             while (hasMoreQuestionsToCreate()) {
                 makeQuestionUsingDetails();
             }
+
+            return;
+        }
+};
+
+class Timer {
+
+};
+
+class QuizTaking {
+    private:
+        int currentVectorQuestionIndex = 0;
+
+        int currentQuestionNumber() {
+            return currentVectorQuestionIndex + 1;
+        }
+
+        template <typename T>
+        bool hasMoreQuestionsToAnswer(const T &createdQuestionVector) {
+            return (currentVectorQuestionIndex < createdQuestionVector.size());
+        }
+
+        const auto &getCachedQuestions() {
+            return CreatedQuestions::outputVectorData();
+        }
+
+    public:
+        template <typename T>
+        void displayQuestionAndChoices(const T &createdQuestionVector, const int currentVectorQuestionIndex)
+        {
+            cout << currentQuestionNumber() << ". " << createdQuestionVector[currentVectorQuestionIndex].question << endl;
+            cout << "   A. " << createdQuestionVector[currentVectorQuestionIndex].choiceA << endl;
+            cout << "   B. " << createdQuestionVector[currentVectorQuestionIndex].choiceB << endl;
+
+            if (createdQuestionVector[currentVectorQuestionIndex].choiceC != "") {
+                cout << "   C. " << createdQuestionVector[currentVectorQuestionIndex].choiceC << endl;
+            }
+
+            if (createdQuestionVector[currentVectorQuestionIndex].choiceD != "")
+            {
+                cout << "   D. " << createdQuestionVector[currentVectorQuestionIndex].choiceD << endl;
+            }
+
+            if (createdQuestionVector[currentVectorQuestionIndex].isTimed)
+            {
+                cout << "Duration: " << createdQuestionVector[currentVectorQuestionIndex].durationSeconds << " seconds" << endl;
+            }
+        }
+
+        template <typename T>
+        void retrieveUserAnswerTimed(const T &createdQuestionVector, const int currentVectorQuestionIndex) {
+            cout << "Enter your answer [A/B/C/D]" << endl;
+
+            auto startTime = steady_clock::now();
+
+            while (true) {
+                if (_kbhit()) {
+                    char validatedAnswer = _getch();
+
+                    if ((validatedAnswer == 'C' || validatedAnswer == 'c') &&
+                        (createdQuestionVector[currentVectorQuestionIndex].choiceC == ""))
+                    {
+                        cout << "Warning: Cannot answer C, answer considered blank!" << endl;
+                        break;
+                    }
+
+                    if ((validatedAnswer == 'D' || validatedAnswer == 'd') &&
+                        (createdQuestionVector[currentVectorQuestionIndex].choiceD == ""))
+                    {
+                        cout << "Warning: Cannot answer D, answer considered blank!" << endl;
+                        break;
+                    }
+
+                    if (validatedAnswer != 'A' && validatedAnswer != 'a' &&
+                        validatedAnswer != 'B' && validatedAnswer != 'b' &&
+                        validatedAnswer != 'C' && validatedAnswer != 'c' &&
+                        validatedAnswer != 'D' && validatedAnswer != 'd')
+                    {
+                        cout << "Warning: Invalid letter, answer considered blank!" << endl;
+                        break;
+                    }
+
+                    CreatedQuestions::addUserAnswerToVector(validatedAnswer, currentVectorQuestionIndex);
+                    break;
+                }
+
+                auto currentTime = steady_clock::now();
+
+                if (duration_cast<std::chrono::seconds>(currentTime - startTime).count() >= 5) {
+                    cout << "Time is up!" << endl;
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            cout << "Your answer: " << createdQuestionVector[currentVectorQuestionIndex].selectedAnswer << endl;
+        }
+
+        template <typename T>
+        void retrieveUserAnswerUntimed(const T &createdQuestionVector, const int currentVectorQuestionIndex) {
+            string input = "";
+            bool hasNotEnteredValidLetter = true;
+
+            cout << "Enter your answer [A/B/C/D]" << endl;
+
+            while (hasNotEnteredValidLetter) {
+                
+                getline(cin, input);
+
+                if ((input == "C" || input == "c") && (createdQuestionVector[currentVectorQuestionIndex].choiceC == "")) {
+                    cout << "Warning: Cannot answer C, try again!" << endl;
+
+                    displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
+                    cout << "Enter your answer [A/B/C/D]" << endl;
+
+                    continue;
+                }
+
+                if ((input == "D" || input == "d") && (createdQuestionVector[currentVectorQuestionIndex].choiceD == "")) {
+                    cout << "Warning: Cannot answer D, try again!" << endl;
+
+                    displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
+                    cout << "Enter your answer [A/B/C/D]" << endl;
+
+                    continue;
+                }
+
+                if (input != "A" && input != "a" &&
+                    input != "B" && input != "b" &&
+                    input != "C" && input != "c" &&
+                    input != "D" && input != "d")
+                {
+                    cout << "Warning: Invalid letter, try again!" << endl;
+
+                    displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
+                    cout << "Enter your answer [A/B/C/D]" << endl;
+
+                    continue;
+                }
+
+                CreatedQuestions::addUserAnswerToVector(ConvertLetterStringToChar(input), currentVectorQuestionIndex);
+
+                cout << "Your answer: " << createdQuestionVector[currentVectorQuestionIndex].selectedAnswer << endl;
+                hasNotEnteredValidLetter = false;
+            }
+            return;
+        }
+
+        void runQuizTaking()
+        {
+            while (hasMoreQuestionsToAnswer(getCachedQuestions())) {
+                displayQuestionAndChoices(getCachedQuestions(), currentVectorQuestionIndex);
+
+                if (getCachedQuestions()[currentVectorQuestionIndex].isTimed) {
+                    retrieveUserAnswerTimed(getCachedQuestions(), currentVectorQuestionIndex);
+                    currentVectorQuestionIndex++;
+                }
+                else {
+                    retrieveUserAnswerUntimed(getCachedQuestions(), currentVectorQuestionIndex);
+                    currentVectorQuestionIndex++;
+                }
+            }
         }
 };
 
 int main() {
     QuizCreation qCreation;
     qCreation.runQuizCreation();
+
+    QuizTaking qTaking;
+    // qTaking.displayQuestionAndChoices(CreatedQuestions::outputVectorData());
+    qTaking.runQuizTaking();
 
     return 0;
 }

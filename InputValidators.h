@@ -13,7 +13,6 @@ int ConvertNumberStringToInt(string input);
 
 namespace InputValidators
 {
-    // TODO: move all validator functions to their own namespace
     template <typename T>
     bool validateStringDetails(string &inputData, T &questionDataField, const string &emptyInputMessage)
     {
@@ -30,9 +29,9 @@ namespace InputValidators
 
         if constexpr (std::is_same_v<T, string>)
         {
-            cout << "DEBUG | String Details (Question, A-D, ...) selected" << endl; // DEBUG
+            // cout << "DEBUG | String Details (Question, A-D, ...) selected" << endl; // DEBUG
             questionDataField = inputData;
-            cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
@@ -48,7 +47,7 @@ namespace InputValidators
             questionDataField = '\0';
         }
 
-        cout << "DEBUG | Char Details (Correct Choice) selected" << endl; // DEBUG
+        // cout << "DEBUG | Char Details (Correct Choice) selected" << endl; // DEBUG
         char charConversionResult = ConvertLetterStringToChar(inputData);
 
         if (charConversionResult == '\0')
@@ -66,18 +65,17 @@ namespace InputValidators
             {
                 if (questionDataStruct.choiceC == "" && (charConversionResult == 'C' || charConversionResult == 'c'))
                 {
-                    cout << "Warning: Cannot select an empty choice!";
+                    cout << "Warning: Cannot select an empty choice!" << endl;
                     return false;
                 }
                 else if (questionDataStruct.choiceD == "" && (charConversionResult == 'D' || charConversionResult == 'd'))
                 {
-                    cout << "Warning: Cannot select an empty choice!";
+                    cout << "Warning: Cannot select an empty choice!" << endl;
                     return false;
                 } // TODO: make conditional expression readable
 
                 questionDataField = charConversionResult;
-                cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
-                // TODO: reset function for correct choice detail
+                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
                 return true;
             }
         }
@@ -105,9 +103,9 @@ namespace InputValidators
         {
             if constexpr (std::is_same_v<T, bool>)
             {
-                cout << "DEBUG | Bool Details (Is Timed) selected" << endl; // DEBUG
+                // cout << "DEBUG | Bool Details (Is Timed) selected" << endl; // DEBUG
                 questionDataField = true;
-                cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
                 return true;
             }
         }
@@ -115,8 +113,8 @@ namespace InputValidators
         {
             if constexpr (std::is_same_v<T, bool>)
             {
-                cout << "DEBUG | Bool Details (Is Timed) selected" << endl;            // DEBUG
-                cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+                // cout << "DEBUG | Bool Details (Is Timed) selected" << endl;            // DEBUG
+                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
                 return true;
             }
         }
@@ -133,7 +131,7 @@ namespace InputValidators
             questionDataField = 0;
         }
 
-        cout << "DEBUG | Int Details (Seconds Duration) selected" << endl; // DEBUG
+        // cout << "DEBUG | Int Details (Seconds Duration) selected" << endl; // DEBUG
         int intConversionResult = ConvertNumberStringToInt(inputData);
 
         if (intConversionResult == 0)
@@ -145,7 +143,7 @@ namespace InputValidators
         if constexpr (std::is_same_v<T, int>)
         {
             questionDataField = intConversionResult;
-            cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
