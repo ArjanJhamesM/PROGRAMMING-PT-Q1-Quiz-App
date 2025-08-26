@@ -1,4 +1,3 @@
-//
 #include <iostream>
 #include <string>
 #include <vector>
@@ -7,17 +6,20 @@
 #include <chrono>
 #include <thread>
 #include "InputValidators.h"
+#include <cctype>
 
-//
 using std::cin;
 using std::cout;
 using std::endl;
 using std::string;
+using std::toupper;
 using std::vector;
 using std::chrono::duration_cast;
-using std::chrono::milliseconds;
-using std::chrono::seconds;
 using std::chrono::steady_clock;
+
+int showPositionOfCurrentNumber(const int index) {
+    return index + 1;
+}
 
 char ConvertLetterStringToChar(string input) {
     if (!input.empty()) {
@@ -119,6 +121,11 @@ class CreatedQuestions {
 
 vector<Questionnaire::qTemplate> CreatedQuestions::createdQuestions;
 
+const auto &getCachedQuestions()
+{
+    return CreatedQuestions::outputVectorData();
+}
+
 class InputQuestionData {
     private:
         Questionnaire questionnaire;
@@ -145,6 +152,7 @@ class QuizCreation {
         const string INCORRECT_SECONDS_WARNING = WARNING_PREFIX + "Invalid input for seconds!";
         const string INVALID_BOOL_WARNING = WARNING_PREFIX + "Did not enter \'T\', \'t\', \'F\', or \'f\'!";
         const string INVALID_CORRECT_CHOICE_WARNING = WARNING_PREFIX + "Did not enter \'A\'/\'a\', \'B\'/\'b\', \'C\'/\'c\', or \'D\'/\'d\',!";
+        const string INVALID_INPUT_WARNING = WARNING_PREFIX + "Invalid input!";
 
         const string QUESTION_SELECTION = "Question";
         const string CHOICE_A_SELECTION = "Choice A";
@@ -158,11 +166,6 @@ class QuizCreation {
         InputQuestionData inputQuestionData;
         Questionnaire::qTemplate& iQuestionData = inputQuestionData.getInputQuestionData();
 
-        int displayCountOfNewQuestion()
-        {
-            return numberOfCreatedQuestions + 1;
-        }
-
         bool hasMoreQuestionsToCreate() {
             return (numberOfCreatedQuestions < numberOfQuestionsToCreate);
         }
@@ -173,13 +176,13 @@ class QuizCreation {
 
             string input = "";
             getline(cin, input);
+            cout << "\n";
 
             try
             {
                 int stringInputToInt = std::stoi(input);
 
                 if (stringInputToInt <= 0) {
-                    cout << WARNING_PREFIX << "Invalid number input!" << endl;
                     return false;
                 }
 
@@ -201,7 +204,8 @@ class QuizCreation {
 
         void askTotalNumberUntilSuccess() {
             while (!askTotalQuestionsCount()) {
-                cout << WARNING_PREFIX << "Invalid input!" << endl;
+                cout << INVALID_INPUT_WARNING << endl;
+                cout << "\n";
             }
         }
 
@@ -210,8 +214,9 @@ class QuizCreation {
         bool promptQuestionDetails(const string &inputSelection, const string &promptText, T &questionDataField) {
             inputData = "";
 
-            cout << "For question #" << displayCountOfNewQuestion() << ": " << promptText << endl;
+            cout << "For question #" << showPositionOfCurrentNumber(numberOfCreatedQuestions) << ": " << promptText << endl;
             getline(cin, inputData);
+            cout << "\n";
 
             if (inputSelection == QUESTION_SELECTION) {
                 if constexpr (std::is_same_v<T, string>) {
@@ -235,15 +240,13 @@ class QuizCreation {
                                                                   iQuestionData);
                 }
             }
-            else if (inputSelection == IS_TIMED_SELECTION)
-            {
+            else if (inputSelection == IS_TIMED_SELECTION) {
                 if constexpr (std::is_same_v<T, bool>)
                 {
                     return InputValidators::validateBoolDetails(inputData, questionDataField, EMPTY_TIMED_WARNING, INVALID_BOOL_WARNING);
                 }
             }
-            else if (inputSelection == DURATION_SECONDS_SELECTION)
-            {
+            else if (inputSelection == DURATION_SECONDS_SELECTION) {
                 if constexpr (std::is_same_v<T, int>)
                 {
                     return InputValidators::validateIntDetails(inputData, questionDataField, INCORRECT_SECONDS_WARNING);
@@ -256,7 +259,8 @@ class QuizCreation {
         template <typename T>
         void askDetailsUntilSuccess(const string &inputSelection, const string promptText, T &questionDataField) {
             while (!promptQuestionDetails(inputSelection, promptText, questionDataField)) {
-                cout << "Warning: Invalid input!" << endl;
+                cout << INVALID_INPUT_WARNING << endl;
+                cout << "\n";
             }
         }
 
@@ -267,6 +271,7 @@ class QuizCreation {
             cout << "Would you like to enter Choice " << choiceLetter << "? [y/n]" << endl;
             string input = "";
             getline(cin, input);
+            cout << "\n";
 
             if (input == "N" || input == "n") {
                 input = "";
@@ -286,7 +291,8 @@ class QuizCreation {
                                     T &questionDataField)
         {
             while (!promptOptionalChoices(choiceLetter, inputSelection, promptText, questionDataField)) {
-                cout << "Warning: Invalid input!" << endl;
+                cout << INVALID_INPUT_WARNING << endl;
+                cout << "\n";
             }
         }
 
@@ -304,7 +310,7 @@ class QuizCreation {
         }
 
         void promptTimeDetails() {
-            askDetailsUntilSuccess(IS_TIMED_SELECTION, "Make the question timed?", iQuestionData.isTimed);
+            askDetailsUntilSuccess(IS_TIMED_SELECTION, "Make the question timed? [t/f]", iQuestionData.isTimed);
 
             // cout << "DEBUG | Is question timed: " << iQuestionData.isTimed << endl; // DEBUG
 
@@ -319,7 +325,7 @@ class QuizCreation {
         void makeQuestionUsingDetails() {
             askDetailsUntilSuccess(QUESTION_SELECTION, "Enter question", iQuestionData.question);
             promptChoicesDetails();
-            askDetailsUntilSuccess(CORRECT_CHOICE_SELECTION, "Enter the correct choice", iQuestionData.correctChoice);
+            askDetailsUntilSuccess(CORRECT_CHOICE_SELECTION, "Enter the correct choice [a/b (/c/d)]", iQuestionData.correctChoice);
             promptTimeDetails();
 
             // // DEBUG
@@ -369,32 +375,23 @@ class QuizCreation {
         }
 };
 
-class Timer {
-
-};
 
 class QuizTaking {
     private:
         int currentVectorQuestionIndex = 0;
-
-        int currentQuestionNumber() {
-            return currentVectorQuestionIndex + 1;
-        }
 
         template <typename T>
         bool hasMoreQuestionsToAnswer(const T &createdQuestionVector) {
             return (currentVectorQuestionIndex < createdQuestionVector.size());
         }
 
-        const auto &getCachedQuestions() {
-            return CreatedQuestions::outputVectorData();
-        }
+        const string CHOICES_PROMPT = "Enter your answer [a/b/c/d]";
 
     public:
         template <typename T>
         void displayQuestionAndChoices(const T &createdQuestionVector, const int currentVectorQuestionIndex)
         {
-            cout << currentQuestionNumber() << ". " << createdQuestionVector[currentVectorQuestionIndex].question << endl;
+            cout << showPositionOfCurrentNumber(currentVectorQuestionIndex) << ". " << createdQuestionVector[currentVectorQuestionIndex].question << endl;
             cout << "   A. " << createdQuestionVector[currentVectorQuestionIndex].choiceA << endl;
             cout << "   B. " << createdQuestionVector[currentVectorQuestionIndex].choiceB << endl;
 
@@ -415,13 +412,22 @@ class QuizTaking {
 
         template <typename T>
         void retrieveUserAnswerTimed(const T &createdQuestionVector, const int currentVectorQuestionIndex) {
-            cout << "Enter your answer [A/B/C/D]" << endl;
+            cout << CHOICES_PROMPT << endl;
 
             auto startTime = steady_clock::now();
 
             while (true) {
                 if (_kbhit()) {
                     char validatedAnswer = _getch();
+
+                    if (validatedAnswer != 'A' && validatedAnswer != 'a' &&
+                        validatedAnswer != 'B' && validatedAnswer != 'b' &&
+                        validatedAnswer != 'C' && validatedAnswer != 'c' &&
+                        validatedAnswer != 'D' && validatedAnswer != 'd')
+                    {
+                        cout << "Warning: Invalid letter, answer considered blank!" << endl;
+                        break;
+                    }
 
                     if ((validatedAnswer == 'C' || validatedAnswer == 'c') &&
                         (createdQuestionVector[currentVectorQuestionIndex].choiceC == ""))
@@ -434,15 +440,6 @@ class QuizTaking {
                         (createdQuestionVector[currentVectorQuestionIndex].choiceD == ""))
                     {
                         cout << "Warning: Cannot answer D, answer considered blank!" << endl;
-                        break;
-                    }
-
-                    if (validatedAnswer != 'A' && validatedAnswer != 'a' &&
-                        validatedAnswer != 'B' && validatedAnswer != 'b' &&
-                        validatedAnswer != 'C' && validatedAnswer != 'c' &&
-                        validatedAnswer != 'D' && validatedAnswer != 'd')
-                    {
-                        cout << "Warning: Invalid letter, answer considered blank!" << endl;
                         break;
                     }
 
@@ -460,6 +457,7 @@ class QuizTaking {
             }
 
             cout << "Your answer: " << createdQuestionVector[currentVectorQuestionIndex].selectedAnswer << endl;
+            cout << "\n";
         }
 
         template <typename T>
@@ -467,17 +465,19 @@ class QuizTaking {
             string input = "";
             bool hasNotEnteredValidLetter = true;
 
-            cout << "Enter your answer [A/B/C/D]" << endl;
+            cout << CHOICES_PROMPT << endl;
 
             while (hasNotEnteredValidLetter) {
-                
                 getline(cin, input);
+                cout << "\n";
 
                 if ((input == "C" || input == "c") && (createdQuestionVector[currentVectorQuestionIndex].choiceC == "")) {
                     cout << "Warning: Cannot answer C, try again!" << endl;
 
+                    input = "";
+
                     displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
-                    cout << "Enter your answer [A/B/C/D]" << endl;
+                    cout << CHOICES_PROMPT << endl;
 
                     continue;
                 }
@@ -485,8 +485,10 @@ class QuizTaking {
                 if ((input == "D" || input == "d") && (createdQuestionVector[currentVectorQuestionIndex].choiceD == "")) {
                     cout << "Warning: Cannot answer D, try again!" << endl;
 
+                    input = "";
+
                     displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
-                    cout << "Enter your answer [A/B/C/D]" << endl;
+                    cout << CHOICES_PROMPT << endl;
 
                     continue;
                 }
@@ -498,8 +500,10 @@ class QuizTaking {
                 {
                     cout << "Warning: Invalid letter, try again!" << endl;
 
+                    input = "";
+
                     displayQuestionAndChoices(createdQuestionVector, currentVectorQuestionIndex);
-                    cout << "Enter your answer [A/B/C/D]" << endl;
+                    cout << CHOICES_PROMPT << endl;
 
                     continue;
                 }
@@ -507,6 +511,8 @@ class QuizTaking {
                 CreatedQuestions::addUserAnswerToVector(ConvertLetterStringToChar(input), currentVectorQuestionIndex);
 
                 cout << "Your answer: " << createdQuestionVector[currentVectorQuestionIndex].selectedAnswer << endl;
+                cout << "\n";
+
                 hasNotEnteredValidLetter = false;
             }
             return;
@@ -529,13 +535,81 @@ class QuizTaking {
         }
 };
 
+class Scoring {
+    private:
+        int score = 0;
+
+    public:
+        template <typename T>
+        int calculateScore(const T &createdQuestionVector) {
+            for (int i = 0; i < createdQuestionVector.size(); i++) {
+                char validatedSelectedAnswer = toupper(createdQuestionVector[i].selectedAnswer);
+                char validatedCorrectChoice = toupper(createdQuestionVector[i].correctChoice);
+
+                if (validatedSelectedAnswer == validatedCorrectChoice) {
+                    score++;
+                }
+            }
+
+            return score;
+        }
+};
+
+class QuizResults {
+    public:
+        string checkIfCorrectAnswer(const char &validatedSelectedAnswer, const char &validatedCorrectChoice) {
+            if (validatedSelectedAnswer == validatedCorrectChoice) {
+                return "Correctly answered!";
+            }
+            else {
+                return "Answered incorrectly!";
+            }
+        }
+
+        template <typename T>
+        void displayQuizResults(const T &createdQuestionVector)
+        {
+            Scoring scoring;
+
+            for (const auto &element : createdQuestionVector)
+            {
+                int currentVectorQuestionIndex = 0;
+                char validatedSelectedAnswer = toupper(element.selectedAnswer);
+                char validatedCorrectChoice = toupper(element.correctChoice);
+
+                cout << "For question #" << showPositionOfCurrentNumber(currentVectorQuestionIndex) << ": " << element.question << endl;
+                cout << "Your answer: " << validatedSelectedAnswer << " | " << "Correct answer: " << validatedCorrectChoice << endl;
+                cout << checkIfCorrectAnswer(validatedSelectedAnswer, validatedCorrectChoice) << endl;
+
+                currentVectorQuestionIndex++;
+
+                cout << "\n";
+            }
+
+            cout << "Total Score: " << scoring.calculateScore(createdQuestionVector) << "/" << createdQuestionVector.size() << endl;
+            cout << "Press any key to exit the quiz app" << endl;
+            cout << "\n";
+            _getch();    
+        }
+};
+
 int main() {
     QuizCreation qCreation;
     qCreation.runQuizCreation();
 
+    cout << "Press any key to start taking the quiz" << endl;
+    _getch();
+    cout << "\n";
+
     QuizTaking qTaking;
-    // qTaking.displayQuestionAndChoices(CreatedQuestions::outputVectorData());
     qTaking.runQuizTaking();
+
+    cout << "Press any key to view your quiz results" << endl;
+    _getch();
+    cout << "\n";
+
+    QuizResults qResults;
+    qResults.displayQuizResults(getCachedQuestions());
 
     return 0;
 }

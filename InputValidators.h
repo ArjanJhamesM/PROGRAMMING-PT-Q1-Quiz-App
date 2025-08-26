@@ -35,6 +35,7 @@ namespace InputValidators
             return true;
         }
 
+        cout << "Warning: No if branches matched" << endl;
         return false;
     }
 
@@ -42,6 +43,8 @@ namespace InputValidators
     bool validateCorrectChoice(string &inputData, T &questionDataField, const string &emptyInputMessage,
                                const string &incorrectInputMessage, U &questionDataStruct)
     {
+        const string MISSING_CHOICE_WARNING = "Warning: Cannot select an empty choice!";
+
         if constexpr (std::is_same_v<T, char>)
         {
             questionDataField = '\0';
@@ -56,31 +59,34 @@ namespace InputValidators
             return false;
         }
 
-        if (charConversionResult == 'A' || charConversionResult == 'a' ||
-            charConversionResult == 'B' || charConversionResult == 'b' ||
-            charConversionResult == 'C' || charConversionResult == 'c' ||
-            charConversionResult == 'D' || charConversionResult == 'd')
+        if (charConversionResult != 'A' && charConversionResult != 'a' &&
+            charConversionResult != 'B' && charConversionResult != 'b' &&
+            charConversionResult != 'C' && charConversionResult != 'c' &&
+            charConversionResult != 'D' && charConversionResult != 'd')
         {
-            if constexpr (std::is_same_v<T, char>)
-            {
-                if (questionDataStruct.choiceC == "" && (charConversionResult == 'C' || charConversionResult == 'c'))
-                {
-                    cout << "Warning: Cannot select an empty choice!" << endl;
-                    return false;
-                }
-                else if (questionDataStruct.choiceD == "" && (charConversionResult == 'D' || charConversionResult == 'd'))
-                {
-                    cout << "Warning: Cannot select an empty choice!" << endl;
-                    return false;
-                } // TODO: make conditional expression readable
-
-                questionDataField = charConversionResult;
-                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
-                return true;
-            }
+            cout << incorrectInputMessage << endl;
+            return false;
         }
 
-        cout << incorrectInputMessage << endl;
+        if (questionDataStruct.choiceC == "" && (charConversionResult == 'C' || charConversionResult == 'c'))
+        {
+            cout << MISSING_CHOICE_WARNING << endl;
+            return false;
+        }
+        else if (questionDataStruct.choiceD == "" && (charConversionResult == 'D' || charConversionResult == 'd'))
+        {
+            cout << MISSING_CHOICE_WARNING << endl;
+            return false;
+        }
+
+        if constexpr (std::is_same_v<T, char>)
+        {
+            questionDataField = charConversionResult;
+            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+            return true;
+        }
+
+        cout << "Warning: No if branches matched" << endl;
         return false;
     }
 
@@ -99,17 +105,14 @@ namespace InputValidators
             return false;
         }
 
-        if (inputData == "T" || inputData == "t")
+        if (inputData != "T" && inputData != "t" &&
+            inputData != "F" && inputData != "f")
         {
-            if constexpr (std::is_same_v<T, bool>)
-            {
-                // cout << "DEBUG | Bool Details (Is Timed) selected" << endl; // DEBUG
-                questionDataField = true;
-                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
-                return true;
-            }
+            cout << incorrectInputMessage << endl;
+            return false;
         }
-        else if (inputData == "F" || inputData == "f")
+
+        if (inputData == "F" || inputData == "f")
         {
             if constexpr (std::is_same_v<T, bool>)
             {
@@ -119,7 +122,15 @@ namespace InputValidators
             }
         }
 
-        cout << incorrectInputMessage << endl;
+        if constexpr (std::is_same_v<T, bool>)
+        {
+            // cout << "DEBUG | Bool Details (Is Timed) selected" << endl; // DEBUG
+            questionDataField = true;
+            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+            return true;
+        }
+
+        cout << "Warning: No if branches matched" << endl;
         return false;
     }
 
@@ -147,6 +158,7 @@ namespace InputValidators
             return true;
         }
 
+        cout << "Warning: No if branches matched" << endl;
         return false;
     }
 }
