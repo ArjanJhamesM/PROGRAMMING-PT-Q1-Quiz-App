@@ -8,30 +8,26 @@ using std::cout;
 using std::endl;
 using std::string;
 
-char ConvertLetterStringToChar(string input);
+char ConvertLetterStringToChar(string input); // external functions' declarations
 int ConvertNumberStringToInt(string input);
-
-namespace InputValidators
-{
-    template <typename T>
+// validators catch errors in user input before storing the input itself to the specified struct field
+namespace InputValidators { // to separate from the otherwise lengthy QuizCreation class
+    template <typename T> // so the type of the argument is deduced automatically
     bool validateStringDetails(string &inputData, T &questionDataField, const string &emptyInputMessage)
-    {
-        if constexpr (std::is_same_v<T, string>)
-        {
+    { // these validators are boolean return functions because they signal whether user input was correctly stored or not
+        // using the concept of guard clauses here
+        if constexpr (std::is_same_v<T, string>) { // reset struct field before manipulating it
             questionDataField = "";
         }
 
-        if (inputData.empty())
-        {
+        if (inputData.empty()) {
             cout << emptyInputMessage << endl;
             return false;
         }
 
         if constexpr (std::is_same_v<T, string>)
-        {
-            // cout << "DEBUG | String Details (Question, A-D, ...) selected" << endl; // DEBUG
+        { // constexpr only runs this statement body if deduced type is same to the required type
             questionDataField = inputData;
-            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
@@ -43,18 +39,15 @@ namespace InputValidators
     bool validateCorrectChoice(string &inputData, T &questionDataField, const string &emptyInputMessage,
                                const string &incorrectInputMessage, U &questionDataStruct)
     {
-        const string MISSING_CHOICE_WARNING = "Warning: Cannot select an empty choice!";
+        const string MISSING_CHOICE_WARNING = "Warning: Cannot select an empty choice!"; // self-documenting warning
 
-        if constexpr (std::is_same_v<T, char>)
-        {
+        if constexpr (std::is_same_v<T, char>) {
             questionDataField = '\0';
         }
 
-        // cout << "DEBUG | Char Details (Correct Choice) selected" << endl; // DEBUG
         char charConversionResult = ConvertLetterStringToChar(inputData);
 
-        if (charConversionResult == '\0')
-        {
+        if (charConversionResult == '\0') {
             cout << emptyInputMessage << endl;
             return false;
         }
@@ -63,26 +56,22 @@ namespace InputValidators
             charConversionResult != 'B' && charConversionResult != 'b' &&
             charConversionResult != 'C' && charConversionResult != 'c' &&
             charConversionResult != 'D' && charConversionResult != 'd')
-        {
+        { // user mistyped ABCD/abcd
             cout << incorrectInputMessage << endl;
             return false;
         }
-
-        if (questionDataStruct.choiceC == "" && (charConversionResult == 'C' || charConversionResult == 'c'))
-        {
+        // handle user error for answering non-existent choices C and D
+        if (questionDataStruct.choiceC == "" && (charConversionResult == 'C' || charConversionResult == 'c')) {
             cout << MISSING_CHOICE_WARNING << endl;
             return false;
         }
-        else if (questionDataStruct.choiceD == "" && (charConversionResult == 'D' || charConversionResult == 'd'))
-        {
+        else if (questionDataStruct.choiceD == "" && (charConversionResult == 'D' || charConversionResult == 'd')) {
             cout << MISSING_CHOICE_WARNING << endl;
             return false;
         }
 
-        if constexpr (std::is_same_v<T, char>)
-        {
+        if constexpr (std::is_same_v<T, char>) {
             questionDataField = charConversionResult;
-            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
@@ -94,39 +83,31 @@ namespace InputValidators
     bool validateBoolDetails(string &inputData, T &questionDataField, const string &emptyInputMessage,
                              const string &incorrectInputMessage)
     {
-        if constexpr (std::is_same_v<T, bool>)
-        {
+        if constexpr (std::is_same_v<T, bool>) {
             questionDataField = false;
         }
 
-        if (inputData.empty())
-        {
+        if (inputData.empty()) {
             cout << emptyInputMessage << endl;
             return false;
         }
 
         if (inputData != "T" && inputData != "t" &&
             inputData != "F" && inputData != "f")
-        {
+        { // user mistyped T/F/t/f
             cout << incorrectInputMessage << endl;
             return false;
         }
 
-        if (inputData == "F" || inputData == "f")
-        {
+        if (inputData == "F" || inputData == "f") {
             if constexpr (std::is_same_v<T, bool>)
-            {
-                // cout << "DEBUG | Bool Details (Is Timed) selected" << endl;            // DEBUG
-                // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
+            { // no changes needed since the boolean field of questionnaire struct is false already
                 return true;
             }
         }
 
-        if constexpr (std::is_same_v<T, bool>)
-        {
-            // cout << "DEBUG | Bool Details (Is Timed) selected" << endl; // DEBUG
+        if constexpr (std::is_same_v<T, bool>) {
             questionDataField = true;
-            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
@@ -135,26 +116,20 @@ namespace InputValidators
     }
 
     template <typename T>
-    bool validateIntDetails(string &inputData, T &questionDataField, const string &incorrectInputMessage)
-    {
-        if constexpr (std::is_same_v<T, bool>)
-        {
+    bool validateIntDetails(string &inputData, T &questionDataField, const string &incorrectInputMessage) {
+        if constexpr (std::is_same_v<T, int>) {
             questionDataField = 0;
         }
 
-        // cout << "DEBUG | Int Details (Seconds Duration) selected" << endl; // DEBUG
         int intConversionResult = ConvertNumberStringToInt(inputData);
 
-        if (intConversionResult == 0)
-        {
+        if (intConversionResult == 0) {
             cout << incorrectInputMessage << endl;
             return false;
         }
 
-        if constexpr (std::is_same_v<T, int>)
-        {
+        if constexpr (std::is_same_v<T, int>) {
             questionDataField = intConversionResult;
-            // cout << "DEBUG | Retrieved user input: " << questionDataField << endl; // DEBUG
             return true;
         }
 
