@@ -352,7 +352,7 @@ class QuizTaking {
 
         template <typename T>
         bool hasMoreQuestionsToAnswer(const T &createdQuestionVector) {
-            return (currentVectorQuestionIndex < createdQuestionVector.size()); // follows off-by-one rule
+            return (currentVectorQuestionIndex < static_cast<int>(createdQuestionVector.size())); // follows off-by-one rule
         } // .size() tells how many questions with each of their own struct fields has been created
 
         const string CHOICES_PROMPT = "Enter your answer [a/b/c/d]";
@@ -511,7 +511,7 @@ class Scoring {
     public:
         template <typename T>
         int calculateScore(const T &createdQuestionVector) { // for loops allow checking all vector's stored questions
-            for (int i = 0; i < createdQuestionVector.size(); i++) {
+            for (int i = 0; i < static_cast<int>(createdQuestionVector.size()); i++) {
                 char validatedSelectedAnswer = toupper(createdQuestionVector[i].selectedAnswer);
                 char validatedCorrectChoice = toupper(createdQuestionVector[i].correctChoice);
 
@@ -539,7 +539,7 @@ class QuizResults {
         void displayQuizResults(const T &createdQuestionVector) {
             Scoring scoring;
 
-            for (int i = 0; i < createdQuestionVector.size(); i++) { // obvious ba???
+            for (int i = 0; i < static_cast<int>(createdQuestionVector.size()); i++) { // obvious ba???
                 char validatedSelectedAnswer = toupper(createdQuestionVector[i].selectedAnswer);
                 char validatedCorrectChoice = toupper(createdQuestionVector[i].correctChoice);
 
